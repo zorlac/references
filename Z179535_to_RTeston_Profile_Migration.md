@@ -2,8 +2,8 @@
 **Z179535 → RTeston (Pragmatic / Least-Bad Approach)**
 
 > ⚠️ DISCLAIMER  
-> This procedure is **not Microsoft-supported**.  
-> It is a **controlled profile path reassignment** intended to preserve a required home folder name (`RTeston`) when rebuilding the profile is not an option.  
+>  
+> This is a **controlled profile path reassignment** intended to preserve a required home folder name (`RTeston`) when rebuilding the profile is not an option.  
 >  
 > Expect some post-migration cleanup (VPN, OneDrive, Edge, Store apps).
 
