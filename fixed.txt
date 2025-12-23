@@ -1,0 +1,27 @@
+Remember in Phase 3, the runbook excluded it:
+  /XF ntuser.dat ntuser.dat.log*
+ 
+  But Windows needs NTUSER.DAT to load a profile. Without it, Windows says "this isn't a valid profile" and creates a TEMP profile.
+ 
+  The Fix
+ 
+  From LocalAdm_Strict, copy the registry hive files:
+ 
+  copy "C:\Users\Z179535\NTUSER.DAT" "C:\Users\RTeston\"
+  copy "C:\Users\Z179535\NTUSER.DAT.LOG*" "C:\Users\RTeston\"
+ 
+  Also check if these exist and copy them too:
+  copy "C:\Users\Z179535\AppData\Local\Microsoft\Windows\UsrClass.dat" "C:\Users\RTeston\AppData\Local\Microsoft\Windows\"
+  copy "C:\Users\Z179535\AppData\Local\Microsoft\Windows\UsrClass.dat.LOG*" "C:\Users\RTeston\AppData\Local\Microsoft\Windows\"
+ 
+  Why the Runbook Excluded It
+ 
+  The runbook was cautious because NTUSER.DAT from a different user would cause problems. But in your case, you're using the same user (Z179535) - just relocating their profile folder. The
+  NTUSER.DAT belongs to Z179535 and should work fine in the new location.
+ 
+  After Copying
+ 
+  1. Verify the files exist:
+  dir "C:\Users\RTeston\NTUSER.DAT"
+  2. Check registry again - make sure no new .bak appeared
+  3. Try logging in as Z179535
