@@ -1,3 +1,80 @@
+## Future Laptop Migration with USMT (User State Migration Tool)
+
+  ### Requirement
+
+  When IT uses USMT to backup and restore the laptop, the profile must be restored to `C:\Users\RTeston` instead of `C:\Users\Z179535`. Many applications and configurations depend on the `RTeston` folder path.
+
+  ---
+
+  ### Option 1: Pre-Create Profile Before Restore
+
+  1. **Before restoring**, create the target folder on the new machine:
+     ```cmd
+     mkdir C:\Users\RTeston
+
+  2. Run USMT ScanState (backup) on old machine as normal
+  3. Run USMT LoadState (restore) on new machine
+  4. Before first login as Z179535, update the registry:
+  HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\<SID>
+  ProfileImagePath = C:\Users\RTeston
+  5. Log in as Z179535 — profile will load from C:\Users\RTeston
+
+  ---
+  ### Option 2: Use Custom Migration XML
+
+  Create a custom migration XML that maps the profile folder:
+  ```xml
+  <ProfileControl>
+      <localGroups>
+          <mappings>
+              <changeGroup>
+                  <include>
+                      <pattern>CAREMARKRX\Z179535</pattern>
+                  </include>
+                  <profileBase>RTeston</profileBase>
+              </changeGroup>
+          </mappings>
+      </localGroups>
+  </ProfileControl>
+```
+  Include this in the LoadState command:  
+  ```
+  loadstate \\server\store /i:custom-migration.xml /lac /lae
+  ```
+
+  ---
+  ### Option 3: Post-Restore Registry Fix
+
+  If USMT restores to C:\Users\Z179535:
+
+  1. Log in as a temporary local admin (not Z179535)
+  2. Rename the profile folder:
+  ren "C:\Users\Z179535" "RTeston"
+  3. Update the registry:
+  HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\<SID>
+  ProfileImagePath = C:\Users\RTeston
+  4. Update Shell Folders in registry (see Phase 4 in main runbook)
+  5. Log in as Z179535
+
+  ---
+  ### Key Message for IT
+
+  "My account is Z179535 but my profile folder must be C:\Users\RTeston — not C:\Users\Z179535. Many applications and configurations depend on the RTeston folder path. Please ensure the USMT restore targets the RTeston profile folder."
+
+  ---
+  ### Post-Restore Checklist
+
+  After USMT restore, verify:
+
+  - echo %USERPROFILE% returns C:\Users\RTeston
+  - Shell Folders registry points to RTeston (not Z179535)
+  - OneDrive linked to RTeston folder
+  - Docker Desktop working
+  - WSL working
+  - No Explorer.exe file association errors
+
+---  
+
 # Windows User Profile Migration Runbook  
 **Z179535 → RTeston (Pragmatic / Least-Bad Approach)**
 
