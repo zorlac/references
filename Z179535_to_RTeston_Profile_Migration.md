@@ -6,56 +6,85 @@
 
   ---
 
-  ### Option 1: Pre-Create Profile Before Restore
+  ### Option 1: Pre-Create Profile Using Known SID
 
-  1. **Before restoring**, create the target folder on the new machine:
-     ```cmd
-     mkdir C:\Users\RTeston
+  **Step A: Get SID from old machine (before migration)**
 
-  2. Run USMT ScanState (backup) on old machine as normal
-  3. Run USMT LoadState (restore) on new machine
-  4. Before first login as Z179535, update the registry:
-  HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\<SID>
-  ProfileImagePath = C:\Users\RTeston
-  5. Log in as Z179535 — profile will load from C:\Users\RTeston
+  Run on old laptop while logged in as Z179535:
+  ```cmd
+  whoami /user
+  ```
+  Save the SID (e.g., S-1-5-21-4258776639-1271169360-244890835-423316). Domain SIDs are the same across machines.
+
+  **Step B: On new machine (before first login as Z179535)**
+
+  1. Log in as a local admin account
+  2. Create the target folder:
+  ```cmd
+    mkdir C:\Users\RTeston
+  ```
+  4. Pre-create the registry entry using the SID from Step A:  
+     (SID: **S-1-5-21-4258776639-1271169360-244890835-423316**)
+  ```cmd
+  reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\<SID>" /v ProfileImagePath /t REG_EXPAND_SZ /d "C:\Users\RTeston" /f
+  reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\<SID>" /v State /t REG_DWORD /d 0 /f
+  ```
+  5. Run USMT LoadState to restore data into C:\Users\RTeston
+  6. Log in as Z179535 — Windows uses the existing registry entry and loads from RTeston
 
   ---
-  ### Option 2: Use Custom Migration XML
+  ### Option 2: Restore First, Then Rename (Fallback)
 
-  Create a custom migration XML that maps the profile folder:
-  ```xml
-  <ProfileControl>
-      <localGroups>
-          <mappings>
-              <changeGroup>
-                  <include>
-                      <pattern>CAREMARKRX\Z179535</pattern>
-                  </include>
-                  <profileBase>RTeston</profileBase>
-              </changeGroup>
-          </mappings>
-      </localGroups>
-  </ProfileControl>
-```
-  Include this in the LoadState command:  
-  ```
-  loadstate \\server\store /i:custom-migration.xml /lac /lae
-  ```
-
-  ---
-  ### Option 3: Post-Restore Registry Fix
-
-  If USMT restores to C:\Users\Z179535:
+  Use this if USMT already restored to C:\Users\Z179535:
 
   1. Log in as a temporary local admin (not Z179535)
   2. Rename the profile folder:
-  ren "C:\Users\Z179535" "RTeston"
-  3. Update the registry:
-  HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\<SID>
-  ProfileImagePath = C:\Users\RTeston
-  4. Update Shell Folders in registry (see Phase 4 in main runbook)
+  ``` ren "C:\Users\Z179535" "RTeston" ```
+  3. Find and update the registry:
+    - Open regedit
+    - Navigate to: HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList
+    - Find the SID key where ProfileImagePath = C:\Users\Z179535
+    - Change it to: C:\Users\RTeston
+  4. Update Shell Folders registry (see Shell Folders fix section below)
   5. Log in as Z179535
 
+  ---
+  Shell Folders Registry Fix (Required for Both Options)
+
+  After profile is set up, verify Shell Folders point to RTeston:
+
+  ```cmd 
+  reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" | findstr Z179535
+  ```
+
+  If any show Z179535, run these commands to fix:
+  ```cmd
+  reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v "AppData" /t REG_SZ /d "C:\Users\RTeston\AppData\Roaming" /f
+  reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v "Desktop" /t REG_SZ /d "C:\Users\RTeston\Desktop" /f
+  reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v "Personal" /t REG_SZ /d "C:\Users\RTeston\Documents" /f
+  reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v "Local AppData" /t REG_SZ /d "C:\Users\RTeston\AppData\Local" /f
+  reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v "{374DE290-123F-4565-9164-39C4925E467B}" /t REG_SZ /d "C:\Users\RTeston\Downloads" /f
+ ```
+  (See full list of Shell Folders commands in main runbook)
+
+  ---
+  ### Key Message for IT
+
+  "My account is Z179535 but my profile folder must be C:\Users\RTeston — not C:\Users\Z179535. Many applications and configurations depend on the RTeston folder path. Please ensure the USMT restore targets the RTeston profile folder."
+
+  "My SID is: S-1-5-21-xxxx-xxxx-xxxx-xxxxxx (provide actual SID)"
+
+  ---
+  ### Post-Restore Checklist
+
+  After USMT restore, verify:
+
+  - echo %USERPROFILE% returns C:\Users\RTeston
+  - Shell Folders registry points to RTeston (not Z179535)
+  - OneDrive linked to RTeston folder
+  - Docker Desktop working
+  - WSL working
+  - No Explorer.exe file association errors
   ---
   ### Key Message for IT
 
