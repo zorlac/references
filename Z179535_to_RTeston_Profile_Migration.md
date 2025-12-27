@@ -72,7 +72,7 @@
 
   "My account is Z179535 but my profile folder must be C:\Users\RTeston — not C:\Users\Z179535. Many applications and configurations depend on the RTeston folder path. Please ensure the USMT restore targets the RTeston profile folder."
 
-  "My SID is: S-1-5-21-xxxx-xxxx-xxxx-xxxxxx (provide actual SID)"
+  "My SID is: **S-1-5-21-4258776639-1271169360-244890835-423316**"
 
   ---
   ### Post-Restore Checklist
