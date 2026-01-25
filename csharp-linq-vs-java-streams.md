@@ -314,20 +314,67 @@ var countByDepartment = users
 
 ### Flat Map
 
+**What is flattening?**
+When you have a list of objects, and each object contains another list,
+`flatMap`/`SelectMany` merges all inner lists into one single list.
+
+```
+Before (nested):     [ [A, B], [C], [D, E, F] ]
+After (flattened):   [ A, B, C, D, E, F ]
+```
+
+**Example types:**
+```csharp
+// A Post has a list of Tags
+public class Post
+{
+    public int Id { get; set; }
+    public string Title { get; set; }
+    public List<string> Tags { get; set; }  // Each post has multiple tags
+}
+
+// Sample data
+var posts = new List<Post>
+{
+    new Post { Id = 1, Title = "C# Tips",   Tags = new List<string> { "csharp", "dotnet" } },
+    new Post { Id = 2, Title = "API Guide", Tags = new List<string> { "api", "rest", "dotnet" } },
+    new Post { Id = 3, Title = "Docker 101", Tags = new List<string> { "docker", "devops" } }
+};
+
+// Without flattening - you get List<List<string>>
+// posts.Select(p => p.Tags) → [ ["csharp","dotnet"], ["api","rest","dotnet"], ["docker","devops"] ]
+
+// With flattening - you get List<string>
+// posts.SelectMany(p => p.Tags) → [ "csharp", "dotnet", "api", "rest", "dotnet", "docker", "devops" ]
+```
+
 ```java
 // Java
 List<String> allTags = posts.stream()
-    .flatMap(post -> post.getTags().stream())
-    .distinct()
+    .flatMap(post -> post.getTags().stream())  // Flatten each post's tags into one stream
+    .distinct()                                  // Remove duplicates
     .collect(Collectors.toList());
+// Result: ["csharp", "dotnet", "api", "rest", "docker", "devops"]
 ```
 
 ```csharp
 // C#
 var allTags = posts
-    .SelectMany(post => post.Tags)
-    .Distinct()
+    .SelectMany(post => post.Tags)  // Flatten each post's tags into one list
+    .Distinct()                      // Remove duplicates
     .ToList();
+// Result: ["csharp", "dotnet", "api", "rest", "docker", "devops"]
+```
+
+**Visual breakdown:**
+```
+Post 1: Tags = ["csharp", "dotnet"]
+Post 2: Tags = ["api", "rest", "dotnet"]
+Post 3: Tags = ["docker", "devops"]
+
+Select (no flatten):     [ ["csharp","dotnet"], ["api","rest","dotnet"], ["docker","devops"] ]
+SelectMany (flattened):  [ "csharp", "dotnet", "api", "rest", "dotnet", "docker", "devops" ]
+Distinct:                [ "csharp", "dotnet", "api", "rest", "docker", "devops" ]
 ```
 
 ---
