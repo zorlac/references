@@ -2,6 +2,7 @@
 
 ## Table of Contents
 
+- [Lambda Expressions](#lambda-expressions)
 - [Lambda Syntax](#lambda-syntax)
 - [Method Comparison](#method-comparison)
 - [Common Operations](#common-operations)
@@ -22,6 +23,189 @@
 - [LINQ to Objects vs LINQ to Entities](#linq-to-objects-vs-linq-to-entities)
 - [Query Syntax (SQL-like)](#query-syntax-sql-like)
 - [Async LINQ (Entity Framework)](#async-linq-entity-framework)
+
+---
+
+## Lambda Expressions
+
+Lambda expressions are anonymous functions — functions without a name that can be passed as arguments.
+
+### Basic Concept
+
+```java
+// Java - Traditional anonymous class
+Comparator<String> comparator = new Comparator<String>() {
+    @Override
+    public int compare(String a, String b) {
+        return a.compareTo(b);
+    }
+};
+
+// Java - Lambda (same thing, shorter)
+Comparator<String> comparator = (a, b) -> a.compareTo(b);
+```
+
+```csharp
+// C# - Traditional delegate
+Comparison<string> comparator = delegate(string a, string b) {
+    return a.CompareTo(b);
+};
+
+// C# - Lambda (same thing, shorter)
+Comparison<string> comparator = (a, b) => a.CompareTo(b);
+```
+
+### Functional Interfaces / Delegates
+
+| Java (Functional Interface) | C# (Delegate) | Description |
+|-----------------------------|---------------|-------------|
+| `Predicate<T>` | `Func<T, bool>` | Takes T, returns boolean |
+| `Function<T, R>` | `Func<T, R>` | Takes T, returns R |
+| `Consumer<T>` | `Action<T>` | Takes T, returns nothing |
+| `Supplier<T>` | `Func<T>` | Takes nothing, returns T |
+| `BiFunction<T, U, R>` | `Func<T, U, R>` | Takes T and U, returns R |
+| `Runnable` | `Action` | Takes nothing, returns nothing |
+
+### Predicate (Filter Condition)
+
+```java
+// Java
+Predicate<User> isAdult = user -> user.getAge() >= 18;
+Predicate<String> isEmpty = String::isEmpty;
+
+// Usage
+boolean result = isAdult.test(user);
+List<User> adults = users.stream().filter(isAdult).collect(Collectors.toList());
+```
+
+```csharp
+// C#
+Func<User, bool> isAdult = user => user.Age >= 18;
+Func<string, bool> isEmpty = s => string.IsNullOrEmpty(s);
+
+// Usage
+bool result = isAdult(user);
+var adults = users.Where(isAdult).ToList();
+```
+
+### Function (Transform)
+
+```java
+// Java
+Function<User, String> getName = user -> user.getName();
+Function<User, String> getName = User::getName;  // Method reference
+
+// Usage
+String name = getName.apply(user);
+List<String> names = users.stream().map(getName).collect(Collectors.toList());
+```
+
+```csharp
+// C#
+Func<User, string> getName = user => user.Name;
+
+// Usage
+string name = getName(user);
+var names = users.Select(getName).ToList();
+```
+
+### Consumer / Action (Side Effects)
+
+```java
+// Java
+Consumer<String> print = message -> System.out.println(message);
+Consumer<String> print = System.out::println;  // Method reference
+
+// Usage
+print.accept("Hello");
+users.forEach(user -> System.out.println(user.getName()));
+```
+
+```csharp
+// C#
+Action<string> print = message => Console.WriteLine(message);
+
+// Usage
+print("Hello");
+users.ForEach(user => Console.WriteLine(user.Name));  // List only
+// or
+foreach (var user in users) Console.WriteLine(user.Name);
+```
+
+### Supplier / Func (Factory)
+
+```java
+// Java
+Supplier<User> createUser = () -> new User();
+Supplier<User> createUser = User::new;  // Constructor reference
+
+// Usage
+User user = createUser.get();
+```
+
+```csharp
+// C#
+Func<User> createUser = () => new User();
+
+// Usage
+User user = createUser();
+```
+
+### Storing Lambdas in Variables
+
+```java
+// Java
+Function<Integer, Integer> square = x -> x * x;
+BiFunction<Integer, Integer, Integer> add = (a, b) -> a + b;
+
+int result = square.apply(5);      // 25
+int sum = add.apply(3, 4);         // 7
+```
+
+```csharp
+// C#
+Func<int, int> square = x => x * x;
+Func<int, int, int> add = (a, b) => a + b;
+
+int result = square(5);            // 25
+int sum = add(3, 4);               // 7
+```
+
+### Multi-line Lambda
+
+```java
+// Java
+Function<User, String> formatUser = user -> {
+    String name = user.getName();
+    int age = user.getAge();
+    return String.format("%s (%d years old)", name, age);
+};
+```
+
+```csharp
+// C#
+Func<User, string> formatUser = user => {
+    string name = user.Name;
+    int age = user.Age;
+    return $"{name} ({age} years old)";
+};
+```
+
+### Method References (Java) vs No Direct Equivalent (C#)
+
+```java
+// Java - Method references
+users.stream().map(User::getName);                    // Instance method
+users.stream().forEach(System.out::println);          // Static method
+users.stream().map(String::new);                      // Constructor
+```
+
+```csharp
+// C# - No method reference syntax, use lambda
+users.Select(u => u.Name);
+users.ToList().ForEach(u => Console.WriteLine(u));
+users.Select(s => new string(s));
+```
 
 ---
 
