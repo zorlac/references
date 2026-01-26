@@ -1,6 +1,6 @@
 # JWT Authentication for OpenPA Microservices
 
-## The Narrative
+## Implement JWT in .Net Core
 
 ### What We're Doing
 
@@ -202,7 +202,7 @@ The rest of our code — controllers, [Authorize] attributes, User.Claims — st
 
 ---
 
-## Diagram (If They Ask)
+## Diagram
 
 ```
 LOGIN:
